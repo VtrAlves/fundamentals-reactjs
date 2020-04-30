@@ -22,7 +22,7 @@ interface Transaction {
 	formattedDate: string
 	type: 'income' | 'outcome'
 	category: { title: string }
-	createdAt: string
+	created_at: string
 }
 
 interface Balance {
@@ -51,13 +51,14 @@ const Dashboard: React.FC<DefaultProps> = (props: DefaultProps) => {
 
 				const transactionsFormatted = data.transactions.map(
 					(transaction: Transaction) => {
-						const { value, createdAt, type } = transaction
+						const { value, created_at, type } = transaction
 
-						const signal = type === 'outcome' ? '-' : ''
+						const signal = type === 'outcome' ? '- ' : ''
 
-						const formattedDate = parseISO(createdAt)
+						const formattedDate = parseISO(created_at)
 
-						console.log(formattedDate)
+						console.log('formatted date', formattedDate)
+						console.log('createdAt')
 
 						transaction.formattedValue = signal + formatValue(value)
 						transaction.formattedDate = formatDate(formattedDate)
