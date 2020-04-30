@@ -1,65 +1,87 @@
-import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import React, { useState } from 'react'
+import { useHistory } from 'react-router-dom'
 
-import filesize from 'filesize';
+import filesize from 'filesize'
 
-import Header from '../../components/Header';
-import FileList from '../../components/FileList';
-import Upload from '../../components/Upload';
+import Header from '../../components/Header'
+import FileList from '../../components/FileList'
+import Upload from '../../components/Upload'
 
-import { Container, Title, ImportFileContainer, Footer } from './styles';
+import { Container, Title, ImportFileContainer, Footer } from './styles'
 
-import alert from '../../assets/alert.svg';
-import api from '../../services/api';
+import alert from '../../assets/alert.svg'
+import api from '../../services/api'
 
 interface FileProps {
-  file: File;
-  name: string;
-  readableSize: string;
+	file: File
+	name: string
+	readableSize: string
 }
 
-const Import: React.FC = () => {
-  const [uploadedFiles, setUploadedFiles] = useState<FileProps[]>([]);
-  const history = useHistory();
+interface DefaultProps {
+	children?: React.ReactNode
+	location: {
+		pathname: string
+	}
+}
 
-  async function handleUpload(): Promise<void> {
-    // const data = new FormData();
+const Import: React.FC<DefaultProps> = (props: DefaultProps) => {
+	const [uploadedFiles, setUploadedFiles] = useState<FileProps[]>([])
+	const history = useHistory()
 
-    // TODO
+	async function handleUpload(): Promise<void> {
+		const data = new FormData()
 
-    try {
-      // await api.post('/transactions/import', data);
-    } catch (err) {
-      // console.log(err.response.error);
-    }
-  }
+		try {
+			const upload = uploadedFiles.map(async dataFile => {
+				data.append('file', dataFile.file)
+				await api.post('/transactions/import', data)
+			})
 
-  function submitFile(files: File[]): void {
-    // TODO
-  }
+			await Promise.all(upload)
 
-  return (
-    <>
-      <Header size="small" />
-      <Container>
-        <Title>Importar uma transação</Title>
-        <ImportFileContainer>
-          <Upload onUpload={submitFile} />
-          {!!uploadedFiles.length && <FileList files={uploadedFiles} />}
+			history.push('/')
+		} catch (err) {
+			console.log(err.response)
+		}
+	}
 
-          <Footer>
-            <p>
-              <img src={alert} alt="Alert" />
-              Permitido apenas arquivos CSV
-            </p>
-            <button onClick={handleUpload} type="button">
-              Enviar
-            </button>
-          </Footer>
-        </ImportFileContainer>
-      </Container>
-    </>
-  );
-};
+	function submitFile(files: File[]): void {
+		const file = files[0]
 
-export default Import;
+		const fileToUpload: FileProps = {
+			file,
+			name: file.name,
+			readableSize: filesize(file.size)
+		}
+
+		setUploadedFiles([...uploadedFiles, fileToUpload])
+	}
+
+	return (
+		<>
+			<Header size="small" currentPath={props.location.pathname} />
+			<Container>
+				<Title>Importar uma transação</Title>
+				<ImportFileContainer>
+					<Upload onUpload={submitFile} />
+					{!!uploadedFiles.length && (
+						<FileList files={uploadedFiles} />
+					)}
+
+					<Footer>
+						<p>
+							<img src={alert} alt="Alert" />
+							Permitido apenas arquivos CSV
+						</p>
+						<button onClick={handleUpload} type="button">
+							Enviar
+						</button>
+					</Footer>
+				</ImportFileContainer>
+			</Container>
+		</>
+	)
+}
+
+export default Import
